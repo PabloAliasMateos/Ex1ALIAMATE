@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Camera;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,7 +19,11 @@ import android.support.v4.app.ActivityCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +37,8 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Pablo Alías Mateos on 02/10/2016.
@@ -45,30 +52,106 @@ public class fragment_camara_time_save extends Fragment {
 
     private View fragment_view;
     private ImageView imageView_survey_picture;                  // Now all the methods can access to this View
+    private ImageButton imageButton_clock;
     private String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download"; // getExternalStorageDirectory does not refer to SD card! it refers to the root of the internal storage outside the app
     private Uri imageURI;                                        // Uri of the last captured image
     private String imageName = "";
     private File directory ;
     private File imageFile ;
+    private int clockButton_animationState = 0;
+    Timer T;
+    private int count = 0;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         fragment_view = inflater.inflate(R.layout.fragment_camera_time_save, container);     // to inflate fragment xml code
+        imageView_survey_picture =  (ImageView) fragment_view.findViewById(R.id.imageView_survey_picture);  // All methods can access to imageView_survey_picture view
+
 
         dataInitialization ();
 
         // Button b = view.findViewById(); // to access fragments views, it is needed to use view previous object
 
-       // All methods can access to imageView_survey_picture view
-        imageView_survey_picture =  (ImageView) fragment_view.findViewById(R.id.imageView_survey_picture);
+        //THREAD FOR CHRONOMETER CALLED FROM FRAGMENT
 
-        // Calling camera from fragment
+        /*
+        Thread chronometer = new Thread() {
+            @Override
+            public void run() {
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(), "Token Generated", Toast.LENGTH_SHORT).show();
+                        ImageButton imageButton_clock =  (ImageButton) fragment_view.findViewById(R.id.imageButton_clock);
+                        long endTime = System.currentTimeMillis()+ 20*1000;
+                        long currentTime = System.currentTimeMillis();
+                        while (System.currentTimeMillis() < endTime) {currentTime = System.currentTimeMillis();}
+                        //while (true) {currentTime = System.currentTimeMillis();}
+                        imageButton_clock.setBackgroundColor(Color.GREEN);
+                    }
+                });
+            }
+        };
+        chronometer.start();
+        */
+
+        // Animation to make blik chronometer button. It will be stopped once clock button is pressed
+
+        final Animation animation = new AlphaAnimation(1, 0); // Change alpha from fully visible to invisible
+        animation.setDuration(700); // duration - half a second
+        animation.setInterpolator(new LinearInterpolator()); // do not alter animation rate
+        animation.setRepeatCount(Animation.INFINITE); // Repeat animation infinitely
+        animation.setRepeatMode(Animation.REVERSE); // Reverse animation at the end so the button will fade back in
+        imageButton_clock = (ImageButton) fragment_view.findViewById(R.id.imageButton_clock);
+        imageButton_clock.startAnimation(animation);
+        clockButton_animationState = 1;
+
+        // Timer to count tasting time
+
+        /*
+        T=new Timer();
+        T.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                getActivity().runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        textView_tastingTime.setText("count="+Integer.toString(count));
+                        count++;
+                    }
+                });
+            }
+        }, 1000, 1000);*/
+
+
+
+        // CAMERA BUTTON: Calling camera from fragment
         fragment_view.findViewById(R.id.imageButton_camera).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 invokeCamera ();
+            }
+        });
+
+        // CHRONOMETER BUTTON
+        imageButton_clock.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (clockButton_animationState == 1) {
+                    //T.cancel();
+                    imageButton_clock.clearAnimation();
+                    clockButton_animationState = 0;
+                }
+                else{
+
+                    imageButton_clock.startAnimation(animation);
+                    clockButton_animationState = 1;
+                }
             }
         });
 
@@ -120,6 +203,8 @@ public class fragment_camara_time_save extends Fragment {
 
         }
     }
+
+
 
     // ========================================================================================================================================
     // NON-OVERRIDE METHODS
