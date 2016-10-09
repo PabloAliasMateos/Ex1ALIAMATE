@@ -33,6 +33,7 @@ import java.util.Date;
 
 /**
  * Created by Pablo Alías Mateos on 02/10/2016.
+ * Description: This is the first Android exercise
  */
 
 public class fragment_camara_time_save extends Fragment {
