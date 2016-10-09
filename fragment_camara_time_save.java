@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.IntegerRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.view.LayoutInflater;
@@ -51,6 +52,10 @@ public class fragment_camara_time_save extends Fragment {
     public static final int IMAGE_PERMISSION_REQUEST_CODE = 1;
 
     private View fragment_view;
+    TextView textView_date ;
+    TextView textView_startingTime ;
+    TextView textView_tastingTime ;
+
     private ImageView imageView_survey_picture;                  // Now all the methods can access to this View
     private ImageButton imageButton_clock;
     private String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download"; // getExternalStorageDirectory does not refer to SD card! it refers to the root of the internal storage outside the app
@@ -60,7 +65,8 @@ public class fragment_camara_time_save extends Fragment {
     private File imageFile ;
     private int clockButton_animationState = 0;
     Timer T;
-    private int count = 0;
+    private int seconds_counter = 0;
+    private int minutes_counter = 0;
 
     @Nullable
     @Override
@@ -111,24 +117,7 @@ public class fragment_camara_time_save extends Fragment {
 
         // Timer to count tasting time
 
-        /*
-        T=new Timer();
-        T.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                getActivity().runOnUiThread(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        textView_tastingTime.setText("count="+Integer.toString(count));
-                        count++;
-                    }
-                });
-            }
-        }, 1000, 1000);*/
-
-
+        startTimer_tastingTime ();
 
         // CAMERA BUTTON: Calling camera from fragment
         fragment_view.findViewById(R.id.imageButton_camera).setOnClickListener(new View.OnClickListener() {
@@ -143,12 +132,12 @@ public class fragment_camara_time_save extends Fragment {
             @Override
             public void onClick(View v) {
                 if (clockButton_animationState == 1) {
-                    //T.cancel();
+                    T.cancel();
                     imageButton_clock.clearAnimation();
                     clockButton_animationState = 0;
                 }
                 else{
-
+                    startTimer_tastingTime ();
                     imageButton_clock.startAnimation(animation);
                     clockButton_animationState = 1;
                 }
@@ -157,6 +146,7 @@ public class fragment_camara_time_save extends Fragment {
 
         return fragment_view;
     }
+
 
 
     // Method to store automatically the result when the camera native activity is called
@@ -271,19 +261,50 @@ public class fragment_camara_time_save extends Fragment {
         // DATE
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         String date = sdf.format(new Date());
-        TextView textView_date =  (TextView) fragment_view.findViewById(R.id.textView_value_date);
+        textView_date =  (TextView) fragment_view.findViewById(R.id.textView_value_date);
         textView_date.setText(date);
 
         // STARTING TIME
         sdf = new SimpleDateFormat("HH:mm:ss");
         String startingTime = sdf.format(new Date());
-        TextView textView_startingTime =  (TextView) fragment_view.findViewById(R.id.textView_value_starting_time);
+        textView_startingTime =  (TextView) fragment_view.findViewById(R.id.textView_value_starting_time);
         textView_startingTime.setText(startingTime);
 
         // TASTING TIME
         String tastingTime = "00:00:00";
-        TextView textView_tastingTime =  (TextView) fragment_view.findViewById(R.id.textView_value_tasting_time);
+        textView_tastingTime =  (TextView) fragment_view.findViewById(R.id.textView_value_tasting_time);
         textView_tastingTime.setText(tastingTime);
 
+    }
+
+    /**
+     *
+     * To start a timer for checking tasting time
+     */
+
+    private void startTimer_tastingTime() {
+        T=new Timer();
+        T.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                getActivity().runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        String tastingTime_min_sec;
+                        textView_tastingTime =  (TextView) fragment_view.findViewById(R.id.textView_value_tasting_time);
+                        if (seconds_counter == 60){
+                            seconds_counter = 0;
+                            minutes_counter++;
+                        }
+                        //tastingTime_min_sec = Integer.toString(minutes_counter) + ":" + Integer.toString(seconds_counter);
+                        tastingTime_min_sec = String.format("%02d", minutes_counter) + ":" + String.format("%02d", seconds_counter);
+                        textView_tastingTime.setText(tastingTime_min_sec);
+                        seconds_counter++;
+                    }
+                });
+            }
+        }, 1000, 1000);
     }
 }
