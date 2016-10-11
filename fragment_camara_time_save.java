@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -50,6 +51,7 @@ public class fragment_camara_time_save extends Fragment {
 
     public static final int REQUEST_CAMERA = 10;                 // without extends Fragment, it would be just a void java class
     public static final int IMAGE_PERMISSION_REQUEST_CODE = 1;
+    public static final int SURVEY_PERMISSION_REQUEST_CODE = 2;
 
     private View fragment_view;
     TextView textView_date ;
@@ -144,8 +146,27 @@ public class fragment_camara_time_save extends Fragment {
             }
         });
 
+        // SAVE BUTTON
+        fragment_view.findViewById(R.id.imageButton_save).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+                if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                    saveSurvey ();
+                }
+                else{
+                    //permission failed, request
+                    String[] permissionRequest = {Manifest.permission.READ_EXTERNAL_STORAGE};
+                    requestPermissions (permissionRequest, SURVEY_PERMISSION_REQUEST_CODE);
+                }
+
+            }
+        });
+
         return fragment_view;
     }
+
 
 
 
@@ -183,6 +204,17 @@ public class fragment_camara_time_save extends Fragment {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         String imagePath = storagePath + "/" + imageName ;
         if (requestCode == IMAGE_PERMISSION_REQUEST_CODE) {
+
+            if (grantResults[0]==PackageManager.PERMISSION_GRANTED){
+                showImageCaptured ();
+            }
+            else {
+                Toast.makeText(getActivity(), "PERMISSION DENIED: Can not save the image. ", Toast.LENGTH_LONG ).show();
+            }
+
+        }
+
+        if (requestCode == SURVEY_PERMISSION_REQUEST_CODE) {
 
             if (grantResults[0]==PackageManager.PERMISSION_GRANTED){
                 showImageCaptured ();
@@ -307,4 +339,35 @@ public class fragment_camara_time_save extends Fragment {
             }
         }, 1000, 1000);
     }
-}
+
+    /**
+     *
+     * To save the survey
+     */
+
+    private void saveSurvey() {
+
+        //1- Create/Write txt file
+        try {
+            directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File survey_info = new File (directory,"EX1_2016_USERS.txt");
+            if (survey_info.exists()){
+                FileWriter survey_info_writer = new FileWriter(survey_info, true); // true => not overwrite the previous content
+                survey_info_writer.append(System.getProperty("line.separator") + "Pablo 2");
+                survey_info_writer.flush();
+                survey_info_writer.close();
+            }
+            else {
+                FileWriter survey_info_writer = new FileWriter(survey_info, true); // true => not overwrite the previous content
+                survey_info_writer.append("Pablo 2");
+                survey_info_writer.flush();
+                survey_info_writer.close();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+} // End class
